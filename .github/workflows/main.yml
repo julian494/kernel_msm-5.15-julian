@@ -4,7 +4,7 @@ env:
   OUT_DIR: "out"
   KERNEL_VERSION: "5.15"
   ANDROID_VERSION: "13"
-  
+
 on:
   workflow_dispatch:
     inputs:
@@ -127,16 +127,16 @@ jobs:
             echo "CONFIG_LOCALVERSION=\"${{ github.event.inputs.localVersion }}\"" >> "$CONFIG_FILE"
           fi
           
-         CONFIG_FILE="arch/arm64/configs/${{ env.DEFCONFIG_NAME }}"
-            cat >> "$CONFIG_FILE" << 'EOF'
-            CONFIG_MODULES=y
-            CONFIG_MODULE_SIG=n
-            CONFIG_MODULE_SIG_ALL=n
-            CONFIG_MODULE_SIG_FORCE=n
-            CONFIG_KALLSYMS=y
-            CONFIG_TMPFS_XATTR=y
-            CONFIG_TMPFS_POSIX_ACL=y
-            EOF
+          CONFIG_FILE="arch/arm64/configs/${{ env.DEFCONFIG_NAME }}"
+          cat >> "$CONFIG_FILE" << 'EOF'
+          CONFIG_MODULES=y
+          CONFIG_MODULE_SIG=n
+          CONFIG_MODULE_SIG_ALL=n
+          CONFIG_MODULE_SIG_FORCE=n
+          CONFIG_KALLSYMS=y
+          CONFIG_TMPFS_XATTR=y
+          CONFIG_TMPFS_POSIX_ACL=y
+          EOF
 
       - name: "🔧 Setup Wild KSU with SUSFS"
         if: matrix.variant == 'ksu'
@@ -279,18 +279,3 @@ jobs:
           name: ${{ env.ZIP_NAME }}
           path: ${{ env.ZIP_PATH }}
           retention-days: 7
-
-      - name: "📱 Send to Telegram"
-        if: always()
-        run: |
-          if [[ -f "${{ env.ZIP_PATH }}" ]]; then
-            curl -s -F document=@"${{ env.ZIP_PATH }}" \
-                 -F caption="✅ Kernel Build Complete (WildKSU) - $(date '+%Y-%m-%d %H:%M:%S')" \
-                 -F chat_id=${{ secrets.TELEGRAM_USER_ID }} \
-                 "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument"
-          else
-            curl -s -X POST \
-                 -d chat_id=${{ secrets.TELEGRAM_USER_ID }} \
-                 -d text="❌ Kernel build failed" \
-                 "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
-          fi
